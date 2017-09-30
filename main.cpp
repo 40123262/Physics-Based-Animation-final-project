@@ -26,13 +26,6 @@
 #include "Body.h"
 #include "Particle.h"
 
-
-// time
-GLfloat deltaTime = 0.0f;
-GLfloat lastFrame = 0.0f;
-
-
-
 // main function
 int main()
 {
@@ -45,36 +38,42 @@ int main()
 	Mesh plane = Mesh::Mesh();
 	Mesh plane2 = Mesh::Mesh();
 
+	//floor
 	plane.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	plane.setShader(Shader("resources/shaders/core.vert", "resources/shaders/core.frag"));
+
+	//back wall
 	plane2.translate(glm::vec3(0.0f, 5.0f, -5.0f));
 	plane2.rotate(1.57f, glm::vec3(1.0f, 0.0f, 0.0f));
 	plane2.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	plane2.setShader(Shader("resources/shaders/core.vert", "resources/shaders/core.frag"));
+
+
 	// create particles
 	Particle balls[3];
-	glm::vec3 velocity[sizeof(balls) / sizeof(balls[0])];
+	glm::vec3 velocity[sizeof(balls) / sizeof(balls[0])];  //TO BE CHANGED (use velocity IN particle class)
 	for (int i = 0; i < sizeof(balls) / sizeof(balls[0]); i++)
 	{
 		velocity[i] = glm::vec3(3.0f, 2.0f, 1.0f);
 		balls[i] = Particle::Particle();
+	//	balls[i].setMass((GLfloat)i);
 		balls[i].setPos(glm::vec3(0.0f+1.0f*i, 7.5f, 0.0f));
 		balls[i].getMesh().setShader(Shader("resources/shaders/core.vert", "resources/shaders/core_blue.frag"));
 	}
 	// time
-	const double deltaTime = 0.00005;
+	GLdouble deltaTime = 0.01;
 	GLfloat currentTime = (GLfloat)glfwGetTime();
-	double accumulator = 0.0;
+	GLdouble accumulator = 0.0;
 	
-	//Newton
+	//Physics (to be changed (new class?)
 	glm::vec3 allForces;
-	glm::vec3 airDragForce;
+//	glm::vec3 airDragForce;
 	glm::vec3 gravityForce;
-	glm::vec3 windForce;
+	glm::vec3 windForce = glm::vec3(0.4f, 0.0f, 0.0f);
 	glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
-	float mass = 1.0f;
-	
+	GLfloat mass = 1.0f;
 	glm::vec3 acceleration;
+
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
@@ -91,21 +90,25 @@ int main()
 		// Manage interaction
 		app.doMovement(deltaTime);
 
+		//"Free the physics" thingy
 		while (accumulator >= deltaTime)
 		{
 			/*
 			**	SIMULATION
 			*/
-			//windForce = glm::vec3(2.0f, 0.0f, 0.0f);
 
 			gravityForce = mass * g;
 
+			//air drag to be fixed (doesn't look/work too well)
 			//airDragForce = (1.25f * .47f * velocity[1]*velocity[1]) / 2.0f;
 
-			allForces = /*windForce + */ gravityForce;// +airDragForce;
+			allForces =/* windForce + */ gravityForce;// +airDragForce;
 
-			acceleration = allForces / mass;
-			velocity[1] += deltaTime*acceleration;
+			balls[1].setAcc(allForces / balls[1].getMass());
+			balls[2].setAcc(allForces / balls[2].getMass());
+
+			velocity[1] += deltaTime*balls[1].getAcc();
+			velocity[2] += deltaTime*balls[2].getAcc();
 
 			balls[2].setVel(velocity[2]);
 			balls[2].translate(balls[2].getVel()*deltaTime); //Forward Euler
@@ -165,7 +168,7 @@ int main()
 		*/		
 		// clear buffer
 		app.clear();
-		// draw groud plane
+		// draw groud and back planes
 		app.draw(plane);
 		app.draw(plane2);
 		// draw particles
