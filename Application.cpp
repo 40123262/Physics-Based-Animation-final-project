@@ -171,6 +171,7 @@ void Application::draw(const Mesh &mesh)
 	m_projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 1000.0f);
 	m_view = camera.GetViewMatrix();
 
+
 	// Get the uniform locations
 	GLint modelLoc = glGetUniformLocation(mesh.getShader().Program, "model");
 	GLint viewLoc = glGetUniformLocation(mesh.getShader().Program, "view");

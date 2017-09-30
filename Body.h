@@ -26,7 +26,6 @@ public:
 	glm::vec3& getVel() { return m_vel; }
 	glm::vec3& getPos() { return m_pos; }
 
-
 	// physical properties
 	float getMass() const { return m_mass; }
 	float getCor() { return m_cor; }
@@ -39,10 +38,11 @@ public:
 
 	// dynamic variables
 	void setAcc(const glm::vec3 &vect) { m_acc = vect; }
-	void setVel(const glm::vec3 &vect) { m_vel = vect; }
-	void setVel(int i, float v) { m_vel[i] = v; } //set the ith coordinate of the velocity vector
+	void setVel(const glm::vec3 &vect) { m_vel = vect;}
+	void setVel(int i, float v) { m_vel[i] = v;} //set the ith coordinate of the velocity vector
 	void setPos(const glm::vec3 &vect) { m_pos = vect; m_mesh.setPos(vect); }
 	void setPos(int i, float p) { m_pos[i] = p; m_mesh.setPos(i, p); } //set the ith coordinate of the position vector
+
 
 	// physical properties
 	void setCor(float cor) { m_cor = cor; }
@@ -57,6 +57,14 @@ public:
 	void rotate(float angle, const glm::vec3 &vect);
 	void scale(const glm::vec3 &vect);
 
+	//my own methods to abstract physics calculations in main
+	void addGravity();
+	void applyForce(const glm::vec3 &vect);
+	void applyDrag(GLfloat dragForce);
+	void moveSemiImplicitEuler(GLfloat deltaTime);
+	void moveForwardEuler(GLfloat deltaTime);
+	void Body::bounceBetween(const glm::vec3 &bottom, const glm::vec3 &top);
+
 private:
 	Mesh m_mesh; // mesh used to represent the body
 
@@ -66,5 +74,6 @@ private:
 	glm::vec3 m_acc; // acceleration
 	glm::vec3 m_vel; // velocity
 	glm::vec3 m_pos; // position
+	bool inGravity = false; //needed to determine the acceleration of a body(to add(or not) gravitational pull to acceleration coming from other forces)
 };
 
