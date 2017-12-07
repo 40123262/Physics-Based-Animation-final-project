@@ -43,6 +43,7 @@ int main()
 	plane.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	plane.setShader(Shader("resources/shaders/core.vert", "resources/shaders/core.frag"));
 
+
 	//back wall
 	plane2.translate(glm::vec3(0.0f, 5.0f, -5.0f));
 	plane2.rotate(1.57f, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -91,8 +92,10 @@ int main()
 		{
 			//cb.setInvInertia(cb.getInvInertia());
 			glm::vec3 temp = cb.checkCollision(plane);
-			if (temp!= glm::vec3(0))
+			if (temp != glm::vec3(0))
+			{
 				cb.applyImpulse(J, temp);
+			}
 			
 			cb.rotateRB(deltaTime);
 			cb.move(deltaTime);

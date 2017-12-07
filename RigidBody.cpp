@@ -39,18 +39,25 @@ void RigidBody::applyImpulse(glm::vec3 &J, glm::vec3 point)
 glm::vec3 RigidBody::checkCollision(Mesh otherBody) 
 {
 	glm::vec3 sum = glm::vec3(0);
-	GLfloat count = 0.0f;
-	for (Vertex vert : getMesh().getVertices())
+	GLfloat count = 0.0f;	
+	std::vector<Vertex> points = getMesh().getVertices();
+	Vertex lowestPoint = points[0];
+	for (Vertex vert : points)
 	{
 		if ((getMesh().getModel() *glm::vec4(vert.getCoord(), 1.0f)).y <= otherBody.getPos().y)
 		{
 			sum+= getScale()*vert.getCoord();
 			count += 1.0f;
+			if (vert.getCoord().y < lowestPoint.getCoord().y)
+				lowestPoint = vert;
 		}				
 	}
 	if (count > 0.0f)
 	{
-		return sum/count;		
+		glm::vec3 displacement = glm::vec3(0.0f);
+		displacement.y =  glm::abs(lowestPoint.getCoord().y);
+		translate(0.001f*displacement);
+		return sum/count;	
 	}
 	else
 		return sum;
