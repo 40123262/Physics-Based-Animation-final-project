@@ -58,8 +58,8 @@ int main()
 	cb.setMesh(cube);	
 	cb.setMass(2.0f);
 	cb.scale(glm::vec3(1.0f, 3.0f, 1.0f));
-//	cb.rotate(M_PI_4, glm::vec3(0.0f, 0.0f, 1.0f));
-	cb.setAngVel(glm::vec3(0.0f, 0.0f,0.1f));
+	//cb.rotate(M_PI_2, glm::vec3(0.0f, 0.0f, 1.0f));
+	cb.setAngVel(glm::vec3(1.5f, 0.0f, 0.5f));
 	cb.translate(glm::vec3(0.0f, 14.0f, 0.0f));
 	cb.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 	cb.addForce(&g);
@@ -90,11 +90,10 @@ int main()
 		////////////////////////////TIME STEP SOLUTION loop
 		while (accumulator >= deltaTime)
 		{
-			//cb.setInvInertia(cb.getInvInertia());
 			glm::vec3 temp = cb.checkCollision(plane);
 			if (temp != glm::vec3(0))
 			{
-				cb.applyImpulse(J, temp);
+				cb.Collide(temp);
 			}
 			
 			cb.rotateRB(deltaTime);

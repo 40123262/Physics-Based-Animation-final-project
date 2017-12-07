@@ -1,6 +1,8 @@
 #include "RigidBody.h"
 #include <vector>
 #include <numeric>
+#include <string>
+#include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/orthonormalize.hpp>
 #include <glm/gtx/matrix_cross_product.hpp>
 RigidBody::RigidBody()
@@ -25,39 +27,65 @@ glm::mat3 RigidBody::getInvInertia()
 				0,	0,	Iz};
 	return glm::inverse(I);
 } //
+
 void RigidBody::applyImpulse(glm::vec3 &J, glm::vec3 point)
 {
-	
-	if (J.y > 1.5f)
-		setVel( J / getMass() + 1.5f*glm::vec3(-(getRotate()*point).x*J.length()*getEl(), 0.0f, -(getRotate()*point).z*J.length()*getEl()));
+		
+	if (glm::length(getVel()) + glm::length(getAngVel()) < 0.1f)
+	{
+		setVel(glm::vec3(0.0f));
+		setAngVel(glm::vec3(0.0f));
+		setAcc(glm::vec3(0.0f));
+	}
 	else
-		setVel( J / getMass() + J.y*glm::vec3(-(getRotate()*point).x*J.length()*getEl(), 0.0f, -(getRotate()*point).z*J.length()*getEl()));
+	{
+		setVel(getVel() + J / getMass());
+		setAngVel(getAngVel() + getInvInertia()*glm::cross(point-getPos(), J));
+	}
+		
+}
+void RigidBody::Collide(glm::vec3 point)
+{
+	glm::vec3 applicationP = point - getPos();
+	glm::vec3 n = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::vec3 vr = getVel() + glm::cross(getAngVel(), applicationP);	
+	glm::vec3 VerticalImpulse = (-(1 + getEl()) * vr * n) / (pow(getMass(), -1) + n * glm::cross((getInvInertia() * (glm::cross(applicationP, n))), applicationP));
 	
-	setAngVel(getAngVel()*0.5f + getRotate()*getInvInertia()*glm::transpose(getRotate())*glm::cross(getRotate()*point, J));
-	J *= getEl();
+	applyImpulse(VerticalImpulse, point);
+	
+	if (glm::length(VerticalImpulse) > 0.0f)
+	{
+		glm::vec3 vt = vr - glm::dot(vr, n) * n;
+		GLfloat u = 0.1f;
+		glm::vec3 Friction = -u * glm::length(VerticalImpulse) * glm::normalize(vt);
+
+		applyImpulse(Friction, point);
+	}
 }
 glm::vec3 RigidBody::checkCollision(Mesh otherBody) 
 {
 	glm::vec3 sum = glm::vec3(0);
 	GLfloat count = 0.0f;	
 	std::vector<Vertex> points = getMesh().getVertices();
-	Vertex lowestPoint = points[0];
+	glm::vec3 lowestPoint = points[0].getCoord();
+
 	for (Vertex vert : points)
 	{
-		if ((getMesh().getModel() *glm::vec4(vert.getCoord(), 1.0f)).y <= otherBody.getPos().y)
+		glm::vec3 collisionP = glm::mat3(getMesh().getModel()) * vert.getCoord() + getPos();
+		if (collisionP.y <= otherBody.getPos().y)
 		{
-			sum+= getScale()*vert.getCoord();
+			sum += collisionP;
 			count += 1.0f;
-			if (vert.getCoord().y < lowestPoint.getCoord().y)
-				lowestPoint = vert;
+			if (collisionP.y < lowestPoint.y)
+				lowestPoint = collisionP;
 		}				
 	}
 	if (count > 0.0f)
 	{
-		glm::vec3 displacement = glm::vec3(0.0f);
-		displacement.y =  glm::abs(lowestPoint.getCoord().y);
-		translate(0.001f*displacement);
-		return sum/count;	
+	glm::vec3 displacement = glm::vec3(0.0f);
+	displacement.y = glm::abs(lowestPoint.y);
+	translate(0.001f*displacement);
+		return sum / count;
 	}
 	else
 		return sum;
