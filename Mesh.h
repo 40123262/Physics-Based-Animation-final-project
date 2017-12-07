@@ -13,12 +13,15 @@
 */
 class Vertex {
 public:
-	Vertex(const glm::vec3& coord) {
-		this->coord = coord;
+	Vertex(){
+		m_coord = glm::vec3();
 	}
-protected:
+	Vertex(const glm::vec3& coord) {
+		m_coord = coord;
+	}
+	glm::vec3 getCoord() const { return m_coord ; }
 private:
-	glm::vec3 coord;
+	glm::vec3 m_coord;
 };
 
 enum MeshBufferPositions
@@ -38,23 +41,30 @@ public:
 	/*
 	** CONSTRUCTORS
 	*/
-
+	enum MeshType
+	{
+		TRIANGLE,
+		QUAD,
+		CUBE
+	};
 	// default constructor creates a horizontal plane or dimensions 1 x 1 centered on the origin
 	Mesh();
 	// create mesh from a .obj file
 	Mesh(const std::string& fileName);
+	Mesh(MeshType type);
 	virtual ~Mesh();
 
 
 	/*
 	** GET AND SET METHODS
 	*/
-
+	std::vector<Vertex> getVertices() { return m_vertices; }
 	// getModel computes the model matrix any time it is required
 	glm::vec3 getPos() const { return getTranslate()[3]; }
 	glm::mat4 getModel() const{ return getTranslate() * getRotate() * getScale();}
 	glm::mat4 getTranslate() const{ return m_translate; }
 	glm::mat4 getRotate() const{ return m_rotate; }
+	void setRotate(glm::mat3 R) {	m_rotate = R;  }
 	glm::mat4 getScale() const{ return m_scale; }
 	Shader getShader() const { return m_shader; }
 	GLuint getVertexArrayObject() const{ return m_vertexArrayObject; }
@@ -118,7 +128,7 @@ private:
 	glm::mat4 m_translate;
 	glm::mat4 m_rotate;
 	glm::mat4 m_scale;
-
+	std::vector<Vertex> m_vertices;
 	Shader m_shader;
 };
 

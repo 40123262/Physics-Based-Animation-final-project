@@ -13,7 +13,7 @@
 
 int Application::SCREEN_WIDTH = 0;
 int Application::SCREEN_HEIGHT = 0;
-
+static bool appswitch;
 // Camera
 Camera Application::camera = Camera::Camera(glm::vec3(0.0f, 0.0f, 0.0f));;
 double Application::lastX = WIDTH / 2.0;
@@ -68,6 +68,11 @@ static void keyCallback(GLFWwindow *window, int key, int scancode, int action, i
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
 
+	if (key == GLFW_KEY_X && action == GLFW_PRESS)
+	{
+		appswitch = (appswitch) ? false : true;
+	}
+	
 	if (key >= 0 && key < 1024)
 	{
 		if (action == GLFW_PRESS)
@@ -164,6 +169,10 @@ void Application::clear() {
 }
 
 // draw mesh
+bool Application::X()
+{
+	return appswitch;
+}
 void Application::draw(const Mesh &mesh)
 {
 	mesh.getShader().Use();

@@ -32,9 +32,11 @@ public:
 	static double lastX;
 	static double lastY;
 
+
+
 	static bool firstMouse; 
 	static bool keys[1024];
-
+	
 
 	// get and set methods
 	GLFWwindow* getWindow() { return m_window; }
@@ -46,7 +48,7 @@ public:
 	//void mouseCallback(GLFWwindow *window, double xPos, double yPos);
 	void doMovement(GLfloat deltaTime);
 	int initRender();
-
+	bool Application::X();
 	// other functions
 	void clear();
 	void draw(const Mesh &mesh);

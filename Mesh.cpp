@@ -1,6 +1,6 @@
 #include "Mesh.h"
 #include <errno.h>
-
+#include <algorithm> 
 /*
 **	MESH 
 */
@@ -24,7 +24,93 @@ Mesh::Mesh()
 	// initialise tansform matrices (identify)
 	initTransform();
 }
+bool duplicate(Vertex i, Vertex j) {
+	return (i.getCoord() == j.getCoord());
+}
+Mesh::Mesh(MeshType type)
+{
+	Vertex vertices[36];
 
+	switch (type)
+	{
+	case TRIANGLE:
+		// Create triangle
+		vertices[0] = Vertex(glm::vec3(-1.0, -1.0, 0.0));
+		vertices[1] = Vertex(glm::vec3(0, 1.0, 0.0));
+		vertices[2] = Vertex(glm::vec3(1.0, -1.0, 0.0));
+		break;
+
+	case QUAD:
+		// create quad
+		vertices[0] = Vertex(glm::vec3(-1.0f, 0.0f, -1.0f));
+		vertices[1] = Vertex(glm::vec3(1.0f, 0.0f, -1.0f));
+		vertices[2] = Vertex(glm::vec3(-1.0f, 0.0f, 1.0f));
+		vertices[3] = Vertex(glm::vec3(1.0f, 0.0f, -1.0f));
+		vertices[4] = Vertex(glm::vec3(-1.0f, 0.0f, 1.0f));
+		vertices[5] = Vertex(glm::vec3(1.0f, 0.0f, 1.0f));
+		break;
+
+	case CUBE:
+		// create cube
+		vertices[0] = Vertex(glm::vec3(-1.0f, -1.0f, -1.0f));
+		vertices[1] = Vertex(glm::vec3(1.0f, -1.0f, -1.0f));
+		vertices[2] = Vertex(glm::vec3(1.0f, 1.0f, -1.0f));
+		vertices[3] = Vertex(glm::vec3(-1.0f, -1.0f, -1.0f));
+		vertices[4] = Vertex(glm::vec3(1.0f, 1.0f, -1.0f));
+		vertices[5] = Vertex(glm::vec3(-1.0f, 1.0f, -1.0f));
+		vertices[6] = Vertex(glm::vec3(-1.0f, -1.0f, 1.0f));
+		vertices[7] = Vertex(glm::vec3(1.0f, -1.0f, 1.0f));
+		vertices[8] = Vertex(glm::vec3(1.0f, 1.0f, 1.0f));
+		vertices[9] = Vertex(glm::vec3(-1.0f, -1.0f, 1.0f));
+		vertices[10] = Vertex(glm::vec3(1.0f, 1.0f, 1.0f));
+		vertices[11] = Vertex(glm::vec3(-1.0f, 1.0f, 1.0f));
+		vertices[12] = Vertex(glm::vec3(-1.0f, -1.0f, -1.0f));
+		vertices[13] = Vertex(glm::vec3(1.0f, -1.0f, -1.0f));
+		vertices[14] = Vertex(glm::vec3(1.0f, -1.0f, 1.0f));
+		vertices[15] = Vertex(glm::vec3(-1.0f, -1.0f, -1.0f));
+		vertices[16] = Vertex(glm::vec3(1.0f, -1.0f, 1.0f));
+		vertices[17] = Vertex(glm::vec3(-1.0f, -1.0f, 1.0f));
+		vertices[18] = Vertex(glm::vec3(-1.0f, 1.0f, -1.0f));
+		vertices[19] = Vertex(glm::vec3(1.0f, 1.0f, -1.0f));
+		vertices[20] = Vertex(glm::vec3(1.0f, 1.0f, 1.0f));
+		vertices[21] = Vertex(glm::vec3(-1.0f, 1.0f, -1.0f));
+		vertices[22] = Vertex(glm::vec3(1.0f, 1.0f, 1.0f));
+		vertices[23] = Vertex(glm::vec3(-1.0f, 1.0f, 1.0f));
+		vertices[24] = Vertex(glm::vec3(-1.0f, -1.0f, -1.0f));
+		vertices[25] = Vertex(glm::vec3(-1.0f, 1.0f, -1.0f));
+		vertices[26] = Vertex(glm::vec3(-1.0f, 1.0f, 1.0f));
+		vertices[27] = Vertex(glm::vec3(-1.0f, -1.0f, -1.0f));
+		vertices[28] = Vertex(glm::vec3(-1.0f, 1.0f, 1.0f));
+		vertices[29] = Vertex(glm::vec3(-1.0f, -1.0f, 1.0f));
+		vertices[30] = Vertex(glm::vec3(1.0f, -1.0f, -1.0f));
+		vertices[31] = Vertex(glm::vec3(1.0f, 1.0f, -1.0f));
+		vertices[32] = Vertex(glm::vec3(1.0f, 1.0f, 1.0f));
+		vertices[33] = Vertex(glm::vec3(1.0f, -1.0f, -1.0f));
+		vertices[34] = Vertex(glm::vec3(1.0f, 1.0f, 1.0f));
+		vertices[35] = Vertex(glm::vec3(1.0f, -1.0f, 1.0f));
+		break;
+	}
+	for (int i = 0; i < 36; i++)
+	{
+		int dup_count = 0;
+		for (int j = i+1; j < 36; j++)
+		{
+			if (duplicate(vertices[i], vertices[j]))
+			{
+				dup_count++;
+				continue;
+			}
+		}
+		if(dup_count==0)
+			m_vertices.push_back(vertices[i]);
+		
+	}
+	//m_vertices = std::vector<Vertex>(std::begin(vertices), std::end(vertices));
+	initMesh(vertices, sizeof(vertices) / sizeof(vertices[0]));
+	initTransform();
+
+	
+}
 // create mesh from a .obj file
 Mesh::Mesh(const std::string& fileName)
 {

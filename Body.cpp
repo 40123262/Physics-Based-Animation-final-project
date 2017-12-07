@@ -1,10 +1,8 @@
 #include "Body.h"
 
-
 Body::Body()
 {
 }
-
 
 Body::~Body()
 {
@@ -23,28 +21,21 @@ void Body::rotate(float angle, const glm::vec3 &vect) {
 void Body::scale(const glm::vec3 &vect) {
 	m_mesh.scale(vect);
 }
-void Body::addGravity(){
-	inGravity = true;
-	m_acc = glm::vec3(0.0f, -9.8f, 0.0f);
-}
-void Body::applyForce(const glm::vec3 &vect)
+
+glm::vec3 Body::applyForces(glm::vec3 x, glm::vec3 v, float dt) //returns acc from each force
 {
-	if (inGravity)
+	glm::vec3 fAccumulator = glm::vec3(0.0f);
+	for (auto &f : m_forces)
 	{
-		m_acc = (vect / m_mass) + glm::vec3(0.0f, -9.8f, 0.0f);
+		fAccumulator += f->apply(m_mass, x, v);
 	}
-	else
-	{
-		m_acc = vect / m_mass;
-	}
+	return fAccumulator/getMass();
 }
-void Body::applyDrag(GLfloat dragForce)
+void Body::move(GLfloat deltaTime)
 {
-	this->applyForce(-1.0f * dragForce*(glm::vec3(m_vel.x/m_vel.length(), m_vel.y/ m_vel.length(), m_vel.z/ m_vel.length())));
-}
-void Body::moveSemiImplicitEuler(GLfloat deltaTime)
-{
-		m_vel += (m_acc*deltaTime);
+		setAcc(applyForces(m_pos, m_vel, deltaTime)); 
+
+		setVel(m_vel + (m_acc*deltaTime));
 		this->setPos(m_pos + m_vel*deltaTime);
 }
 void Body::moveForwardEuler(GLfloat deltaTime)
@@ -52,13 +43,12 @@ void Body::moveForwardEuler(GLfloat deltaTime)
 		this->setPos(m_pos + m_vel*deltaTime);
 		m_vel += (m_acc*deltaTime);
 }
-void Body::bounceBetween(const glm::vec3 &bottom, const glm::vec3 &top)
+void Body::restrict(const glm::vec3 &bottom, const glm::vec3 &top)
 {
 	if (m_pos.y < bottom.y)
 	{
 		m_pos.y = bottom.y;
-		m_vel.y *= -0.8f;
-		this->applyDrag(0.8f);
+		m_vel.y *= -0.9f;
 	}
 	else if (m_pos.y > top.y)
 	{
@@ -87,4 +77,5 @@ void Body::bounceBetween(const glm::vec3 &bottom, const glm::vec3 &top)
 	}
 
 }
+
 
