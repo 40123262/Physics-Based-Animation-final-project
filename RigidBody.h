@@ -1,10 +1,18 @@
 #pragma once
 #include "Body.h"
+struct OBB
+{
+	glm::vec3 center;
+	glm::vec3 u[3];
+	glm::vec3 e;
+};
 
 class RigidBody :
 	public Body
 	{
+	
 	public:
+		
 		RigidBody();
 		~RigidBody();
 		
@@ -15,7 +23,11 @@ class RigidBody :
 		glm::vec3 getAngVel() { return m_angVel; }
 		glm::vec3 getAngAcc() { return m_angAcc; }
 		glm::mat3 getInvInertia();
-		void Collide(glm::vec3 point);
+		OBB getOBB();
+		void HandleCollision(RigidBody &other, glm::vec3 normal);
+		glm::vec3 getAxis(int number, OBB a, OBB b);
+		void Collide(glm::vec3 point, glm::vec3 n);
+		glm::vec3 CheckBodyCollision(RigidBody &other);
 		void applyImpulse(glm::vec3 &J, glm::vec3 point);
 		void rotateRB(GLfloat deltaTime);
 		void MonitorPlaneCollisions(Mesh other);

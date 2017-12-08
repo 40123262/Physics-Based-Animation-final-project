@@ -76,6 +76,7 @@ private:
 	float m_cor; // coefficient of restitution
 	float elasticity;
 
+
 	std::vector <Force *> m_forces;
 	glm::vec3 m_acc; // acceleration
 	glm::vec3 m_vel; // velocity

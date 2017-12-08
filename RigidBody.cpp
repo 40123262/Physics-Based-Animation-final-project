@@ -5,6 +5,8 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/orthonormalize.hpp>
 #include <glm/gtx/matrix_cross_product.hpp>
+
+
 RigidBody::RigidBody()
 {
 	
@@ -27,7 +29,6 @@ glm::mat3 RigidBody::getInvInertia()
 				0,	0,	Iz};
 	return glm::inverse(I);
 } //
-
 void RigidBody::applyImpulse(glm::vec3 &J, glm::vec3 point)
 {
 		
@@ -49,13 +50,12 @@ void RigidBody::MonitorPlaneCollisions(Mesh other)
 	glm::vec3 collisionPoint = checkCollision(other);
 	if (collisionPoint != glm::vec3(0))
 	{
-		Collide(collisionPoint);
+		Collide(collisionPoint, glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 }
-void RigidBody::Collide(glm::vec3 point)
+void RigidBody::Collide(glm::vec3 point, glm::vec3 n)
 {
 	glm::vec3 applicationP = point - getPos();
-	glm::vec3 n = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::vec3 vr = getVel() + glm::cross(getAngVel(), applicationP);	
 	glm::vec3 VerticalImpulse = (-(1 + getEl()) * vr * n) / (pow(getMass(), -1) + n * glm::cross((getInvInertia() * (glm::cross(applicationP, n))), applicationP));
 	
@@ -68,6 +68,188 @@ void RigidBody::Collide(glm::vec3 point)
 		glm::vec3 Friction = -u * glm::length(VerticalImpulse) * glm::normalize(vt);
 
 		applyImpulse(Friction, point);
+	}
+}
+OBB RigidBody::getOBB()
+{
+	OBB temp;
+	temp.u[0] = glm::normalize(glm::vec3(getMesh().getRotate()[0]));
+	temp.u[1] = glm::normalize(glm::vec3(getMesh().getRotate()[1]));
+	temp.u[2] = glm::normalize(glm::vec3(getMesh().getRotate()[2]));
+	temp.center = getPos();
+	temp.e[0] = getScale()[0][0];
+	temp.e[1] = getScale()[1][1];
+	temp.e[2] = getScale()[2][2];
+	return temp;
+}
+glm::vec3 RigidBody::CheckBodyCollision(RigidBody &other)
+{
+
+	int AxisNumber=0;
+	float lowestPenetration = 100.0f;
+	OBB a = getOBB();
+	OBB b = other.getOBB();
+
+	float ra, rb;
+	glm::mat3 R, AbsR;
+
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			R[i][j] = glm::dot(a.u[i], b.u[j]);
+
+	glm::vec3 t = b.center - a.center;
+
+	t = glm::vec3(glm::dot(t, a.u[0]), glm::dot(t, a.u[1]), glm::dot(t, a.u[2]));
+
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			AbsR[i][j] = abs(R[i][j]) + 0.001f;
+
+	for (int i = 0; i < 3; i++)
+	{
+		ra = a.e[i];
+		rb = b.e[0] * AbsR[i][0] + b.e[1] * AbsR[i][1] + b.e[2] * AbsR[i][2];
+		if (abs(t[i]) > ra + rb) return glm::vec3(0);
+		if (abs(t[i]) - (ra + rb) < lowestPenetration) 
+		{ 
+			lowestPenetration = (abs(t[i]) - (ra + rb)); 
+			AxisNumber = 1 + i;
+		}
+	}
+	for (int i = 0; i < 3; i++)
+	{
+		ra = a.e[0] * AbsR[0][i] + a.e[1] * AbsR[1][i] + a.e[2] * AbsR[2][i];
+		rb = b.e[i];
+		if (abs(t[0] * R[0][i] + t[1] * R[1][i] + t[2]*R[2][i]) > ra + rb) return glm::vec3(0);
+		if (abs(t[0] * R[0][i] + t[1] * R[1][i] + t[2] * R[2][i]) - (ra + rb) < lowestPenetration)
+		{ 
+			lowestPenetration = abs(t[0] * R[0][i] + t[1] * R[1][i] + t[2] * R[2][i]) - (ra + rb); 
+			AxisNumber = 4 + i; 
+		}
+	}
+	// Test axis L = A0 x B0
+	ra = a.e[1] * AbsR[2][0] + a.e[2] * AbsR[1][0];
+	rb = b.e[1] * AbsR[0][2] + b.e[2] * AbsR[0][1];
+	if (abs(t[2] * R[1][0] - t[1] * R[2][0]) > ra + rb) return glm::vec3(0);
+	if (abs(t[2] * R[1][0] - t[1] * R[2][0]) - ra - rb < lowestPenetration)
+	{
+		lowestPenetration = abs(t[2] * R[1][0] - t[1] * R[2][0]) - ra - rb;
+		AxisNumber = 7;
+	}
+	// Test axis L = A0 x B1
+	ra = a.e[1] * AbsR[2][1] + a.e[2] * AbsR[1][1];
+	rb = b.e[0] * AbsR[0][2] + b.e[2] * AbsR[0][0];
+	if (abs(t[2] * R[1][1] - t[1] * R[2][1]) > ra + rb) return glm::vec3(0);
+	if (abs(t[2] * R[1][1] - t[1] * R[2][1]) - ra - rb < lowestPenetration)
+	{
+		lowestPenetration = abs(t[2] * R[1][1] - t[1] * R[2][1]) - ra - rb;
+		AxisNumber = 8;
+	}
+	// Test axis L = A0 x B2
+	ra = a.e[1] * AbsR[2][2] + a.e[2] * AbsR[1][2];
+	rb = b.e[0] * AbsR[0][1] + b.e[1] * AbsR[0][0];
+	if (abs(t[2] * R[1][2] - t[1] * R[2][2]) > ra + rb) return glm::vec3(0);
+	if (abs(t[2] * R[1][2] - t[1] * R[2][2]) - ra - rb < lowestPenetration)
+	{
+		lowestPenetration = abs(t[2] * R[1][2] - t[1] * R[2][2]) - ra - rb;
+		AxisNumber = 9;
+	}
+	// Test axis L = A1 x B0
+	ra = a.e[0] * AbsR[2][0] + a.e[2] * AbsR[0][0];
+	rb = b.e[1] * AbsR[1][2] + b.e[2] * AbsR[1][1];
+	if (abs(t[0] * R[2][0] - t[2] * R[0][0]) > ra + rb) return glm::vec3(0);
+	if (abs(t[0] * R[2][0] - t[2] * R[0][0]) - ra - rb < lowestPenetration)
+	{
+		lowestPenetration = abs(t[0] * R[2][0] - t[2] * R[0][0]) - ra - rb;
+		AxisNumber = 10;
+	}
+	// Test axis L = A1 x B1
+	ra = a.e[0] * AbsR[2][1] + a.e[2] * AbsR[0][1];
+	rb = b.e[0] * AbsR[1][2] + b.e[2] * AbsR[1][0];
+	if (abs(t[0] * R[2][1] - t[2] * R[0][1]) > ra + rb) return glm::vec3(0);
+	if (abs(t[0] * R[2][1] - t[2] * R[0][1]) - ra - rb < lowestPenetration)
+	{
+		lowestPenetration = abs(t[0] * R[2][1] - t[2] * R[0][1]) - ra - rb;
+		AxisNumber = 11;
+	}
+	// Test axis L = A1 x B2
+	ra = a.e[0] * AbsR[2][2] + a.e[2] * AbsR[0][2];
+	rb = b.e[0] * AbsR[1][1] + b.e[1] * AbsR[1][0];
+	if (abs(t[0] * R[2][2] - t[2] * R[0][2]) > ra + rb) return glm::vec3(0);
+	if (abs(t[0] * R[2][2] - t[2] * R[0][2]) - ra - rb < lowestPenetration)
+	{
+		lowestPenetration = abs(t[0] * R[2][2] - t[2] * R[0][2]) - ra - rb;
+		AxisNumber = 12;
+	}
+	// Test axis L = A2 x B0
+	ra = a.e[0] * AbsR[1][0] + a.e[1] * AbsR[0][0];
+	rb = b.e[1] * AbsR[2][2] + b.e[2] * AbsR[2][1];
+	if (abs(t[1] * R[0][0] - t[0] * R[1][0]) > ra + rb) return glm::vec3(0);
+	if (abs(t[1] * R[0][0] - t[0] * R[1][0]) - ra - rb < lowestPenetration)
+	{
+		lowestPenetration = abs(t[1] * R[0][0] - t[0] * R[1][0]) - ra - rb;
+		AxisNumber = 13;
+	}
+	// Test axis L = A2 x B1
+	ra = a.e[0] * AbsR[1][1] + a.e[1] * AbsR[0][1];
+	rb = b.e[0] * AbsR[2][2] + b.e[2] * AbsR[2][0];
+	if (abs(t[1] * R[0][1] - t[0] * R[1][1]) > ra + rb) return glm::vec3(0);
+	if (abs(t[1] * R[0][1] - t[0] * R[1][1]) - ra - rb < lowestPenetration)
+	{
+		lowestPenetration = abs(t[1] * R[0][1] - t[0] * R[1][1]) - ra - rb;
+		AxisNumber = 14;
+	}
+	// Test axis L = A2 x B2
+	ra = a.e[0] * AbsR[1][2] + a.e[1] * AbsR[0][2];
+	rb = b.e[0] * AbsR[2][1] + b.e[1] * AbsR[2][0];
+	if (abs(t[1] * R[0][2] - t[0] * R[1][2]) > ra + rb) return glm::vec3(0);
+	if (abs(t[1] * R[0][2] - t[0] * R[1][2]) - ra - rb < lowestPenetration)
+	{
+		lowestPenetration = abs(t[1] * R[0][2] - t[0] * R[1][2]) - ra - rb;
+		AxisNumber = 15;
+	}
+	std::cout << "COLLISION! " << std::endl;
+	return getAxis(AxisNumber, a, b);
+}
+void RigidBody::HandleCollision(RigidBody &other, glm::vec3 normal)
+{
+	other.Collide(other.getPos(), normal);
+
+}
+glm::vec3 RigidBody::getAxis(int number, OBB a, OBB b)
+{
+	switch (number)
+	{
+	case 1:
+		return a.u[0];
+	case 2:
+		return a.u[1];
+	case 3:
+		return a.u[2];
+	case 4:
+		return b.u[0];
+	case 5:
+		return b.u[1];
+	case 6:
+		return b.u[2];
+	case 7:
+		return glm::cross(a.u[0], b.u[0]);
+	case 8:
+		return glm::cross(a.u[0], b.u[1]);
+	case 9:
+		return glm::cross(a.u[0], b.u[2]);
+	case 10:
+		return glm::cross(a.u[1], b.u[0]);
+	case 11:
+		return glm::cross(a.u[1], b.u[1]);
+	case 12:
+		return glm::cross(a.u[1], b.u[2]);
+	case 13:
+		return glm::cross(a.u[2], b.u[0]);
+	case 14:
+		return glm::cross(a.u[2], b.u[1]);
+	case 15:
+		return glm::cross(a.u[2], b.u[2]);
 	}
 }
 glm::vec3 RigidBody::checkCollision(Mesh otherBody) 

@@ -105,6 +105,9 @@ int main()
 		////////////////////////////TIME STEP SOLUTION loop
 		while (accumulator >= deltaTime)
 		{
+			glm::vec3 collisionNormal = cb.CheckBodyCollision(cb2);
+			if (glm::length(collisionNormal) > 0.0f)
+				cb.HandleCollision(cb2, collisionNormal);
 
 			cb.MonitorPlaneCollisions(plane);			
 			cb.rotateRB(deltaTime);
@@ -113,6 +116,7 @@ int main()
 			cb2.MonitorPlaneCollisions(plane);
 			cb2.rotateRB(deltaTime);
 			cb2.move(deltaTime);
+			
 			
 			accumulator -= deltaTime;
 		}
