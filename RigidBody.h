@@ -18,6 +18,7 @@ class RigidBody :
 		void Collide(glm::vec3 point);
 		void applyImpulse(glm::vec3 &J, glm::vec3 point);
 		void rotateRB(GLfloat deltaTime);
+		void MonitorPlaneCollisions(Mesh other);
 		glm::vec3 checkCollision(Mesh otherBody);
 		//void scale(glm::vec3 vect);
 		

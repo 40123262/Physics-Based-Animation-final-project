@@ -44,6 +44,14 @@ void RigidBody::applyImpulse(glm::vec3 &J, glm::vec3 point)
 	}
 		
 }
+void RigidBody::MonitorPlaneCollisions(Mesh other)
+{
+	glm::vec3 collisionPoint = checkCollision(other);
+	if (collisionPoint != glm::vec3(0))
+	{
+		Collide(collisionPoint);
+	}
+}
 void RigidBody::Collide(glm::vec3 point)
 {
 	glm::vec3 applicationP = point - getPos();
