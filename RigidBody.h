@@ -24,6 +24,7 @@ class RigidBody :
 		glm::vec3 getAngAcc() { return m_angAcc; }
 		glm::mat3 getInvInertia();
 		OBB getOBB();
+		bool isAwake() { return awake; }
 		glm::vec3 pointClosestOBB(glm::vec3 p, OBB b);
 		void HandleCollision(RigidBody &other, glm::vec3 normal);
 		glm::vec3 getAxis(int number, OBB a, OBB b);
@@ -37,6 +38,7 @@ class RigidBody :
 		//void scale(glm::vec3 vect);
 		
 			private:
+				bool awake = true;
 				OBB obb;
 				glm::mat3 m_invInertia; // Inverse Inertia
 				glm::vec3 m_angVel; // angular velocity

@@ -53,32 +53,45 @@ int main()
 	Gravity g = Gravity::Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
 	RigidBody cb = RigidBody();
 	RigidBody cb2 = RigidBody();
+	RigidBody cb3 = RigidBody();
+
+	Particle p = Particle();
+	p.setPos(glm::vec3(0.0f, 10.0f, 0.0f));
+
 	Mesh cube = Mesh::Mesh(Mesh::CUBE);
 	Mesh cube2 = Mesh::Mesh(Mesh::CUBE);
 
+	
 	cube.setShader(Shader("resources/shaders/core.vert", "resources/shaders/core_blue.frag"));
 	cube2.setShader(Shader("resources/shaders/core.vert", "resources/shaders/core_blue.frag"));
+	
+
 
 	cb.setMesh(cube);	
 	cb.setMass(1.0f);
 	cb.scale(glm::vec3(1.0f, 3.0f, 1.0f));
 	cb.setAngVel(glm::vec3(0.0f, 0.0f, 0.000001f));
-	cb.translate(glm::vec3(0.0f, 3.1f, 0.0f));
+	cb.translate(glm::vec3(0.0f, 3.0f, 0.0f));
 	cb.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
-	cb.setEl(0.7f);
+	cb.setEl(0.6f);
 
 	cb2.setMesh(cube2);
 	cb2.setMass(1.0f);
 	cb2.scale(glm::vec3(1.0f, 3.0f, 1.0f));
-	//cb2.rotate(M_PI_2, glm::vec3(0,0,1.0f));
-	cb2.setAngVel(glm::vec3(0.0f, 0.0f, 0.0000001f));
-	cb2.translate(glm::vec3(-3.5f, 3.1f, 0.0f));
+	cb2.setAngVel(glm::vec3(0.0f, 0.0f, -1.0001f));
+	cb2.translate(glm::vec3(-3.0f, 4.0f, 0.0f));
 	cb2.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
-	cb2.setEl(0.7f);
+	cb2.setEl(0.6f);
+
+
+
 
 
 	cb.addForce(&g);
 	cb2.addForce(&g);
+
+
+	
 	// Game loop
 	std::cout << glm::to_string(cb.getInvInertia());
 
@@ -106,20 +119,27 @@ int main()
 		////////////////////////////TIME STEP SOLUTION loop
 		while (accumulator >= deltaTime)
 		{
-			glm::vec3 collisionNormal = cb.CheckBodyCollision(cb2);
+			
+				
+			glm::vec3 collisionNormal = cb2.CheckBodyCollision(cb);
 			if (glm::length(collisionNormal) > 0.0f)
 			{
-				cb2.HandleCollision(cb, glm::normalize(collisionNormal));
+				cb.HandleCollision(cb2, glm::normalize(collisionNormal));
 			}
 
-			cb.MonitorPlaneCollisions(plane);			
-			cb.rotateRB(deltaTime);
-			cb.move(deltaTime);
 
-			cb2.MonitorPlaneCollisions(plane);
-			cb2.rotateRB(deltaTime);
-			cb2.move(deltaTime);
 			
+				cb.MonitorPlaneCollisions(plane);
+				cb.rotateRB(deltaTime);
+				cb.move(deltaTime);
+			
+			
+				cb2.MonitorPlaneCollisions(plane);
+				cb2.rotateRB(deltaTime);
+				cb2.move(deltaTime);
+			
+			
+
 			
 			accumulator -= deltaTime;
 		}
@@ -133,8 +153,10 @@ int main()
 		app.draw(plane);		
 	//	app.draw(plane2);
 		// draw cube
+
 		app.draw(cb.getMesh());
 		app.draw(cb2.getMesh());
+		
 	
 		app.display();
 	}

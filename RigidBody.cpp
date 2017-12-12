@@ -291,6 +291,7 @@ glm::vec3 RigidBody::CheckBodyCollision(RigidBody &other)
 		}
 	}
 	}
+	awake = true;
 //	std::cout << "COLLISION! "<< AxisNumber << std::endl;
 	return getAxis(AxisNumber, a, b);
 }
@@ -338,7 +339,7 @@ void RigidBody::HandleCollision(RigidBody &other, glm::vec3 normal)
 
 	glm::vec3 applicationPoint = contacts / count;
 
-	
+	awake = true;
 	glm::vec3 r1 = applicationPoint - obb.center;
 	glm::vec3 r2 = applicationPoint - other.obb.center;
 	glm::vec3 vr = other.getVel() + glm::cross(other.getAngVel(), r2) -(getVel() + glm::cross(getAngVel(), r1));
