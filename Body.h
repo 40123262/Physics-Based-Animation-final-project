@@ -31,7 +31,7 @@ public:
 	// physical properties
 	float getMass() const { return m_mass; }
 	float getCor() { return m_cor; }
-	float getEl() { return elasticity; }
+	GLfloat getEl() { return elasticity; }
 
 	/*
 	** SET METHODS
@@ -74,7 +74,7 @@ private:
 
 	float m_mass; // mass
 	float m_cor; // coefficient of restitution
-	float elasticity;
+	GLfloat elasticity;
 
 
 	std::vector <Force *> m_forces;

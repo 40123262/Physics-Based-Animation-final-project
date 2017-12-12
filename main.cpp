@@ -60,18 +60,19 @@ int main()
 	cube2.setShader(Shader("resources/shaders/core.vert", "resources/shaders/core_blue.frag"));
 
 	cb.setMesh(cube);	
-	cb.setMass(2.0f);
+	cb.setMass(1.0f);
 	cb.scale(glm::vec3(1.0f, 3.0f, 1.0f));
-	cb.setAngVel(glm::vec3(0.0f, 0.0f, 0.00001f));
-	cb.translate(glm::vec3(0.0f, 5.0f, 0.0f));
+	cb.setAngVel(glm::vec3(0.0f, 0.0f, 0.000001f));
+	cb.translate(glm::vec3(0.0f, 3.1f, 0.0f));
 	cb.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 	cb.setEl(0.7f);
 
 	cb2.setMesh(cube2);
-	cb2.setMass(2.0f);
+	cb2.setMass(1.0f);
 	cb2.scale(glm::vec3(1.0f, 3.0f, 1.0f));
-	cb2.setAngVel(glm::vec3(0.0f, 0.0f, 0.10001f));
-	cb2.translate(glm::vec3(-3.0f, 5.0f, 0.0f));
+	//cb2.rotate(M_PI_2, glm::vec3(0,0,1.0f));
+	cb2.setAngVel(glm::vec3(0.0f, 0.0f, 0.0000001f));
+	cb2.translate(glm::vec3(-3.5f, 3.1f, 0.0f));
 	cb2.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 	cb2.setEl(0.7f);
 
@@ -107,7 +108,9 @@ int main()
 		{
 			glm::vec3 collisionNormal = cb.CheckBodyCollision(cb2);
 			if (glm::length(collisionNormal) > 0.0f)
-				cb.HandleCollision(cb2, collisionNormal);
+			{
+				cb2.HandleCollision(cb, glm::normalize(collisionNormal));
+			}
 
 			cb.MonitorPlaneCollisions(plane);			
 			cb.rotateRB(deltaTime);
