@@ -2,6 +2,7 @@
 #include <vector>
 #include <numeric>
 #include <string>
+
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/orthonormalize.hpp>
 #include <glm/gtx/matrix_cross_product.hpp>
@@ -27,10 +28,14 @@ glm::mat3 RigidBody::getInvInertia()
 	glm::mat3 I{Ix, 0, 0,
 				0,	Iy, 0,
 				0,	0,	Iz};
-	return glm::inverse(I);
+	return glm::inverse(getRotate()*I*glm::transpose(getRotate()));
 } //
 void RigidBody::applyImpulse(glm::vec3 &J, glm::vec3 point)
 {
+	if (lastCollisionTime  + 7.0f < (GLfloat)glfwGetTime() && glm::length(getVel()) + glm::length(getAngVel()) < 0.1f)
+		awake = false;
+	else
+		awake = true;
 		
 	if (glm::length(getVel()) + glm::length(getAngVel()) < 0.1f)
 	{
@@ -291,13 +296,17 @@ glm::vec3 RigidBody::CheckBodyCollision(RigidBody &other)
 		}
 	}
 	}
+	
 	awake = true;
-//	std::cout << "COLLISION! "<< AxisNumber << std::endl;
+	lastCollisionTime = (GLfloat)glfwGetTime();
+	other.setColTime(lastCollisionTime);
+	//	std::cout << "COLLISION! "<< AxisNumber << std::endl;
 	return getAxis(AxisNumber, a, b);
 }
 
 void RigidBody::HandleCollision(RigidBody &other, glm::vec3 normal)
 {
+
 	GLfloat minDist = 100.0f;
 	glm::vec3 contacts = glm::vec3(0);
 	GLfloat count = 0;
@@ -339,7 +348,6 @@ void RigidBody::HandleCollision(RigidBody &other, glm::vec3 normal)
 
 	glm::vec3 applicationPoint = contacts / count;
 
-	awake = true;
 	glm::vec3 r1 = applicationPoint - obb.center;
 	glm::vec3 r2 = applicationPoint - other.obb.center;
 	glm::vec3 vr = other.getVel() + glm::cross(other.getAngVel(), r2) -(getVel() + glm::cross(getAngVel(), r1));

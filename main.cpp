@@ -128,12 +128,12 @@ int main()
 			}
 
 
-			
+			if (cb.isAwake()) 
+			{
 				cb.MonitorPlaneCollisions(plane);
 				cb.rotateRB(deltaTime);
 				cb.move(deltaTime);
-			
-			
+			}
 				cb2.MonitorPlaneCollisions(plane);
 				cb2.rotateRB(deltaTime);
 				cb2.move(deltaTime);

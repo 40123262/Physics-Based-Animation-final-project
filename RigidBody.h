@@ -1,5 +1,6 @@
 #pragma once
 #include "Body.h"
+#include <GLFW/glfw3.h>
 struct OBB
 {
 	glm::vec3 center;
@@ -33,11 +34,14 @@ class RigidBody :
 		glm::vec3 CheckBodyCollision(RigidBody &other);
 		void applyImpulse(glm::vec3 &J, glm::vec3 point);
 		void rotateRB(GLfloat deltaTime);
+		void setColTime(GLfloat time) { lastCollisionTime = time; }
 		void MonitorPlaneCollisions(Mesh other);
+		void WakeUp() { awake = true; }
 		glm::vec3 checkCollision(Mesh otherBody);
 		//void scale(glm::vec3 vect);
 		
 			private:
+				GLfloat lastCollisionTime = (GLfloat)glfwGetTime();
 				bool awake = true;
 				OBB obb;
 				glm::mat3 m_invInertia; // Inverse Inertia
